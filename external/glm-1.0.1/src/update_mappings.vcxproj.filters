@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\user\Desktop\Patio\codigos\Real.Time.Ray.Trace\CMakeFiles\63ddcc741c10bd02fe4bd285882e0b63\update_mappings.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Users\user\Desktop\Patio\codigos\Real.Time.Ray.Trace\external\glfw\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Users\user\Desktop\Patio\codigos\Real.Time.Ray.Trace\external\glfw\src\mappings.h.in">
+      <Filter>Header Files</Filter>
+    </None>
+    <None Include="C:\Users\user\Desktop\Patio\codigos\Real.Time.Ray.Trace\external\glfw\CMake\GenerateMappings.cmake" />
+    <None Include="C:\Users\user\Desktop\Patio\codigos\Real.Time.Ray.Trace\external\glm-1.0.1\src\CMakeFiles\update_mappings" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{08DBD17D-A2F0-3DAC-AB7E-0AFE5923B10A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5EE3EE77-4FAC-395D-A1BF-5F4E41ED9497}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
