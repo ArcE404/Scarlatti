@@ -13,23 +13,11 @@ include_directories(
 )
 
 set(MY_HEADER_FILES
-        src/core/device.cpp
-        src/core/device.h
-        src/core/SwapChain.cpp
-        src/core/SwapChain.h
-        src/core/Window.cpp
-        src/core/Window.h
 )
 
 set(MY_SOURCE_FILES
         src/main.cpp
-        src/core/device.cpp
-        src/core/device.h
         src/Common.h
-        src/core/SwapChain.cpp
-        src/core/SwapChain.h
-        src/core/Window.cpp
-        src/core/Window.h
 )
 
 add_executable(${PROJECT_NAME}
