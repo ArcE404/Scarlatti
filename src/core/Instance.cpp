@@ -1,9 +1,10 @@
 //
-// Created by user on 25/10/2024.
+// Created by proxy on 25/10/2024.
 //
 
 #include "Instance.h"
 
+//TODO: verify why the VK_LAYER_KHRONOS_validation are logged twice
 
 namespace ScarlattiCore {
     bool enableExtension(const char *requiredExtensionName,
@@ -88,6 +89,32 @@ namespace ScarlattiCore {
         return {};
     }
 
+    void setUpValidationLayers(std::vector<const char *> &requested_validation_layer) {
+        // We extract the layers that our instance can handle
+        uint32_t instanceLayerCount;
+        vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
+
+        std::vector<VkLayerProperties> supportedInstanceLayers(instanceLayerCount);
+        vkEnumerateInstanceLayerProperties(&instanceLayerCount, supportedInstanceLayers.data());
+
+        // We ask for the optimal validation layers, we must ensure that the optimal are supported by the instance so
+        // we send the supportedInstanceLayer to the method. Then if they exist we add them to the requested validation layers
+        std::vector<const char *> optimal_validation_layers = getOptimalValidationLayers(supportedInstanceLayers);
+        requested_validation_layer.insert(requested_validation_layer.end(), optimal_validation_layers.begin(),
+                                         optimal_validation_layers.end());
+
+        // We need to make a secondary validation to ensure that the requested layers by the user are also supported
+        if (validateLayers(requested_validation_layer, supportedInstanceLayers)) {
+            Common::LOG("Enabled Validation Layers:");
+            for (const auto &layer: requested_validation_layer) {
+                const std::string message = std::string("	\t") + layer;
+                Common::LOG(message);
+            }
+        } else {
+            throw std::runtime_error("Required validation layers are missing.");
+        }
+    }
+
     Instance::Instance(const std::string &application_name,
                        const std::unordered_map<const char *, bool> &required_extensions,
                        const std::vector<const char *> &required_validation_layers,
@@ -99,33 +126,6 @@ namespace ScarlattiCore {
         std::vector<VkExtensionProperties> availableInstanceExtensions(instanceExtensionCount);
         vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount,
                                                availableInstanceExtensions.data());
-
-        // Then we extract the layers that our instance can handle
-        uint32_t instanceLayerCount;
-        vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
-
-        std::vector<VkLayerProperties> supportedInstanceLayers(instanceLayerCount);
-        vkEnumerateInstanceLayerProperties(&instanceLayerCount, supportedInstanceLayers.data());
-
-        // We map the required validation layer (the parameter) to a variable, as requested validation layers
-        std::vector<const char *> requestedValidationLayers(required_validation_layers);
-
-        // We ask for the optimal validation layers, we must ensure that the optimal are supported by the instance so
-        // we send the supportedInstanceLayer to the method. Then if they exist we add them to the requested validation layers
-        std::vector<const char *> optimal_validation_layers = getOptimalValidationLayers(supportedInstanceLayers);
-        requestedValidationLayers.insert(requestedValidationLayers.end(), optimal_validation_layers.begin(),
-                                         optimal_validation_layers.end());
-
-        // We need to make a secoundary validation to ensure that the requested layers by the user are also supported
-        if (validateLayers(requestedValidationLayers, supportedInstanceLayers)) {
-            Common::LOG("Enabled Validation Layers:");
-            for (const auto &layer: requestedValidationLayers) {
-                const std::string message = std::string("	\t") + layer;
-                Common::LOG(message);
-            }
-        } else {
-            throw std::runtime_error("Required validation layers are missing.");
-        }
 
         // we create the application info
         VkApplicationInfo appInfo{};
@@ -168,13 +168,23 @@ namespace ScarlattiCore {
         createInfo.enabledExtensionCount = static_cast<uint32_t>(enabledExtensions.size());
         createInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-        // if active, add the validation layer to the vk instance.
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-        createInfo.enabledLayerCount = static_cast<uint32_t>(requestedValidationLayers.size());
-        createInfo.ppEnabledLayerNames = requestedValidationLayers.data();
+        std::vector<const char *> requestedValidationLayers(required_validation_layers);
+        if(Common::isDebugEnabled()) {
+            Common::LOG("Creating debug messenger");
+            // We map the required validation layer (the parameter) to a variable, as requested validation layers
+            setUpValidationLayers(requestedValidationLayers);
 
-        Common::populateDebugMessengerCreateInfo(debugCreateInfo);
-        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
+            // if active, add the validation layer to the vk instance.
+            createInfo.enabledLayerCount = static_cast<uint32_t>(requestedValidationLayers.size());
+            createInfo.ppEnabledLayerNames = requestedValidationLayers.data();
+
+            Common::populateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
+        }else {
+            createInfo.enabledLayerCount = 0;
+            createInfo.pNext = nullptr;
+        }
 
         if (vkCreateInstance(&createInfo, nullptr, &handler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
