@@ -13,11 +13,15 @@ include_directories(
 )
 
 set(MY_HEADER_FILES
+        src/core/Instance.h
+        src/core/PhysicalDevice.h
 )
 
 set(MY_SOURCE_FILES
         src/main.cpp
         src/Common.h
+        src/core/Instance.cpp
+        src/core/PhysicalDevice.cpp
 )
 
 add_executable(${PROJECT_NAME}

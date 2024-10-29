@@ -1,18 +1,4 @@
-#include <vulkan/vulkan.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib>
-#include <vector>
-#include <cstring>
-#include <optional>
-#include <set>
-#include <cstdint> // Necessary for uint32_t
-#include <limits> // Necessary for std::numeric_limits
-#include <algorithm> // Necessary for std::clamp
-#include <fstream>
-#include <filesystem>
+#include "core/Instance.h"
 
 using namespace std;
 const uint32_t WIDTH = 800;
@@ -853,7 +839,27 @@ private:
     }
 
     void createInstance() {
-        // verify if the validation layers exist in the configuration
+        std::unordered_map<const char*, bool> required_extensions;
+
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::vector<const char *> requiredInstanceExtensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+
+        for (const auto& extensionName : requiredInstanceExtensions) {
+            required_extensions.insert({extensionName, false});
+        }
+        // extension required for debug
+        required_extensions["VK_EXT_debug_utils"] = false;
+
+        std::vector<const char *> required_validation_layers = {"VK_LAYER_KHRONOS_validation"};
+
+        auto newInstance = ScarlattiCore::Instance("Scarlatti Engine", required_extensions, required_validation_layers);
+
+        instance = newInstance.getHandler();
+
+        /*// verify if the validation layers exist in the configuration
         if (enableValidationLayers && !checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
         }
@@ -893,7 +899,9 @@ private:
 
         if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
-        }
+        }*/
+
+
     }
 
     void mainLoop() {
