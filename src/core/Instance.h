@@ -2,13 +2,11 @@
 // Created by user on 25/10/2024.
 //
 
-#ifndef INSTANCE_H
-#define INSTANCE_H
+#pragma once
 
-#include "PhysicalDevice.h"
 #include "../Common.h"
 namespace ScarlattiCore {
-
+class PhysicalDevice;
 class Instance {
 public:
     Instance(const std::string                            &application_name,
@@ -20,7 +18,7 @@ public:
     void queryGpus();
 
 private:
-    VkInstance handler{VK_NULL_HANDLE};
+    VkInstance  handler{VK_NULL_HANDLE};
 
     std::vector<const char *> enabledExtensions;
     std::pmr::vector<std::unique_ptr<PhysicalDevice>> gpus;
@@ -28,5 +26,3 @@ private:
 };
 
 } // ScarlattiCore
-
-#endif //INSTANCE_H

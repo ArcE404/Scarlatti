@@ -3,6 +3,7 @@
 //
 
 #include "Instance.h"
+#include "PhysicalDevice.h"
 
 //TODO: verify why the VK_LAYER_KHRONOS_validation are logged twice
 
@@ -268,6 +269,22 @@ namespace ScarlattiCore {
     }
 
     void Instance::queryGpus() {
+        // Querying valid physical devices on the machine
+        uint32_t physicalDeviceCount{0};
+        vkEnumeratePhysicalDevices(handler, &physicalDeviceCount, nullptr);
 
+        if (physicalDeviceCount < 1)
+        {
+            throw std::runtime_error("Couldn't find a physical device that supports Vulkan.");
+        }
+
+        std::vector<VkPhysicalDevice> physicalDevices;
+        physicalDevices.resize(physicalDeviceCount);
+        vkEnumeratePhysicalDevices(handler, &physicalDeviceCount, physicalDevices.data());
+
+        for (auto &physical_device : physicalDevices)
+        {
+            gpus.push_back(std::make_unique<PhysicalDevice>(*this, physical_device));
+        }
     }
 } // ScarlattiCore

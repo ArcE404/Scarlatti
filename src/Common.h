@@ -26,13 +26,6 @@
 #include <filesystem>
 #include <unordered_map>
 
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-constexpr bool enableValidationLayers = true;
-#endif
-
-
 class Common {
 public:
     static void LOG(std::string message, VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
@@ -54,6 +47,11 @@ public:
     }
 
     bool static isDebugEnabled() {
+#ifdef NDEBUG
+        const bool enableValidationLayers = false;
+#else
+        constexpr bool enableValidationLayers = true;
+#endif
         return enableValidationLayers;
     }
 };
