@@ -17,11 +17,14 @@ public:
                  uint32_t                                      api_version                = VK_API_VERSION_1_0);
     ~Instance();
     VkInstance getHandler();
+    void queryGpus();
+
 private:
     VkInstance handler{VK_NULL_HANDLE};
 
     std::vector<const char *> enabledExtensions;
     std::pmr::vector<std::unique_ptr<PhysicalDevice>> gpus;
+    VkDebugUtilsMessengerEXT debugMessenger{VK_NULL_HANDLE};
 };
 
 } // ScarlattiCore

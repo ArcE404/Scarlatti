@@ -7,6 +7,46 @@
 //TODO: verify why the VK_LAYER_KHRONOS_validation are logged twice
 
 namespace ScarlattiCore {
+
+    VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+        auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+        if (func != nullptr) {
+            return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+        } else {
+            return VK_ERROR_EXTENSION_NOT_PRESENT;
+        }
+    }
+
+    void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+        auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+        if (func != nullptr) {
+            func(instance, debugMessenger, pAllocator);
+        }
+    }
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
+        switch (messageSeverity) {
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            {
+                std::cout << "validation layer: " << pCallbackData->pMessage << std::endl;
+                break;
+            }
+            case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            {
+                std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+                break;
+            }
+            default: std::clog << "Not valid severity message bit" << std::endl;
+        }
+        return VK_FALSE;
+    }
+
     bool enableExtension(const char *requiredExtensionName,
                          const std::vector<VkExtensionProperties> &availableExtensions,
                          std::vector<const char *> *enabledExtensions) {
@@ -115,6 +155,19 @@ namespace ScarlattiCore {
         }
     }
 
+    void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT &create_info) {
+        create_info = {};
+        create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        create_info.pfnUserCallback = debugCallback;
+        create_info.pUserData = nullptr; // Optional
+    }
+
     Instance::Instance(const std::string &application_name,
                        const std::unordered_map<const char *, bool> &required_extensions,
                        const std::vector<const char *> &required_validation_layers,
@@ -179,7 +232,7 @@ namespace ScarlattiCore {
             createInfo.enabledLayerCount = static_cast<uint32_t>(requestedValidationLayers.size());
             createInfo.ppEnabledLayerNames = requestedValidationLayers.data();
 
-            Common::populateDebugMessengerCreateInfo(debugCreateInfo);
+            populateDebugMessengerCreateInfo(debugCreateInfo);
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
         }else {
             createInfo.enabledLayerCount = 0;
@@ -189,12 +242,32 @@ namespace ScarlattiCore {
         if (vkCreateInstance(&createInfo, nullptr, &handler) != VK_SUCCESS) {
             throw std::runtime_error("failed to create instance!");
         }
+
+        if(handler != VK_NULL_HANDLE && Common::isDebugEnabled()) {
+            if (!Common::isDebugEnabled()) return;
+
+            VkDebugUtilsMessengerCreateInfoEXT createInfo;
+            populateDebugMessengerCreateInfo(createInfo);
+
+            if (CreateDebugUtilsMessengerEXT(handler, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+                throw std::runtime_error("failed to set up debug messenger!");
+            }
+        }
+
+        queryGpus();
     }
 
     Instance::~Instance() {
+        if(debugMessenger != VK_NULL_HANDLE) {
+            DestroyDebugUtilsMessengerEXT(handler, debugMessenger, nullptr);
+        }
     }
 
     VkInstance Instance::getHandler() {
         return handler;
+    }
+
+    void Instance::queryGpus() {
+
     }
 } // ScarlattiCore

@@ -16,22 +16,6 @@ const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        func(instance, debugMessenger, pAllocator);
-    }
-}
-
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
@@ -135,7 +119,6 @@ private:
 
     void initVulkan() {
         createInstance();
-        setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
@@ -285,17 +268,6 @@ private:
             default: std::clog << "Not valid severity message bit" << std::endl;
         }
         return VK_FALSE;
-    }
-
-    void setupDebugMessenger() {
-        if (!Common::isDebugEnabled()) return;
-
-        VkDebugUtilsMessengerCreateInfoEXT createInfo;
-        Common::populateDebugMessengerCreateInfo(createInfo);
-
-        if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-            throw std::runtime_error("failed to set up debug messenger!");
-        }
     }
 
     void createRenderPass() {
@@ -897,10 +869,8 @@ private:
         // destroy the logical device
         vkDestroyDevice(device, nullptr);
 
-        if (Common::isDebugEnabled()) {
-            DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-        }
         vkDestroySurfaceKHR(instance, surface, nullptr);
+
         vkDestroyInstance(instance, nullptr);
 
         glfwDestroyWindow(window);
