@@ -41,6 +41,20 @@ namespace ScarlattiCore {
         return handler;
     }
 
+    bool PhysicalDevice::areExtensionsSupported(std::vector<const char *> required_extensions) const {
+        std::set<std::string> requiredExtensions(required_extensions.begin(), required_extensions.end());
+
+        for (const auto& extension : deviceExtensions) {
+            requiredExtensions.erase(extension.extensionName);
+        }
+
+        return requiredExtensions.empty();
+    }
+
+    VkPhysicalDeviceProperties PhysicalDevice::getProperties() const {
+        return properties;
+    }
+
     PhysicalDevice::~PhysicalDevice() {
     }
 } // ScarlattiCore

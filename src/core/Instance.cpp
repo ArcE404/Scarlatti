@@ -224,7 +224,7 @@ namespace ScarlattiCore {
 
         VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
         std::vector<const char *> requestedValidationLayers(required_validation_layers);
-        if(Common::isDebugEnabled()) {
+        if (Common::isDebugEnabled()) {
             Common::LOG("Creating debug messenger");
             // We map the required validation layer (the parameter) to a variable, as requested validation layers
             setUpValidationLayers(requestedValidationLayers);
@@ -235,7 +235,7 @@ namespace ScarlattiCore {
 
             populateDebugMessengerCreateInfo(debugCreateInfo);
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
-        }else {
+        } else {
             createInfo.enabledLayerCount = 0;
             createInfo.pNext = nullptr;
         }
@@ -244,7 +244,7 @@ namespace ScarlattiCore {
             throw std::runtime_error("failed to create instance!");
         }
 
-        if(handler != VK_NULL_HANDLE && Common::isDebugEnabled()) {
+        if (handler != VK_NULL_HANDLE && Common::isDebugEnabled()) {
             if (!Common::isDebugEnabled()) return;
 
             VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -286,5 +286,94 @@ namespace ScarlattiCore {
         {
             gpus.push_back(std::make_unique<PhysicalDevice>(*this, physical_device));
         }
+    }
+
+    void Instance::findQueueFamiliesIndices(PhysicalDevice physical_device, VkSurfaceKHR _surface) {
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(physical_device.getHandler(), &queueFamilyCount, nullptr);
+
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(physical_device.getHandler(), &queueFamilyCount, queueFamilies.data());
+
+        int i = 0;
+        for (const auto& queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                queueFamiliesIndices.graphicsFamily = i;
+            }
+
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(physical_device.getHandler(), i, _surface, &presentSupport);
+
+            if (presentSupport) {
+                queueFamiliesIndices.presentFamily = i;
+            }
+
+            if (queueFamiliesIndices.isComplete()) {
+                break;
+            }
+
+            i++;
+        }
+    }
+
+    void Instance::querySwapChainSupport(PhysicalDevice _device, VkSurfaceKHR _surface) {
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_device.getHandler(), _surface, &swapChainSupportDetails.capabilities);
+
+        // surface formats1
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(_device.getHandler(), _surface, &formatCount, nullptr);
+
+        if (formatCount != 0) {
+            swapChainSupportDetails.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(_device.getHandler(), _surface, &formatCount, swapChainSupportDetails.formats.data());
+        }
+
+        // presentation modes
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(_device.getHandler(), _surface, &presentModeCount, nullptr);
+
+        if (presentModeCount != 0) {
+            swapChainSupportDetails.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(_device.getHandler(), _surface, &presentModeCount, swapChainSupportDetails.presentModes.data());
+        }
+    }
+
+    bool Instance::isDeviceSuitable(PhysicalDevice physical_device, VkSurfaceKHR _surface, std::vector<char const *> required_extensions) {
+        findQueueFamiliesIndices(physical_device, _surface);
+        bool areExtensionsSupported =  physical_device.areExtensionsSupported(required_extensions);
+
+        bool swapChainAdequate = false;
+        if (areExtensionsSupported) {
+            querySwapChainSupport(physical_device, _surface);
+            swapChainAdequate = !swapChainSupportDetails.formats.empty() && !swapChainSupportDetails.presentModes.empty();
+        }
+
+        return queueFamiliesIndices.isComplete() && areExtensionsSupported && swapChainAdequate;
+    }
+
+    PhysicalDevice & Instance::getSuitableGpu(VkSurfaceKHR _surface, std::vector<char const *> required_extensions) {
+        for (auto &gpu : gpus)
+        {
+            if (gpu->getProperties().deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+            {
+                if(isDeviceSuitable(*gpu, _surface, required_extensions)) {
+                    return *gpu;
+                }
+            }
+        }
+
+        throw std::runtime_error("failed to find a suitable GPU!");
+    }
+
+    PhysicalDevice & Instance::getFirstGpu() {
+        return *gpus.front();
+    }
+
+    QueueFamilyIndices & Instance::getQueueFamilies() {
+        return queueFamiliesIndices;
+    }
+
+    SwapChainSupportDetails & Instance::getSwapChainSupport() {
+        return swapChainSupportDetails;
     }
 } // ScarlattiCore
