@@ -32,6 +32,7 @@ public:
     ~Instance();
     VkInstance getHandler();
     void queryGpus();
+    std::vector<const char *> getValidationLayers() const;
 
     PhysicalDevice &getSuitableGpu(VkSurfaceKHR _surface, std::vector<char const *> required_extensions);
     PhysicalDevice &getFirstGpu();
@@ -45,6 +46,7 @@ private:
     QueueFamilyIndices queueFamiliesIndices;
     SwapChainSupportDetails swapChainSupportDetails;
     std::vector<const char *> enabledExtensions;
+    std::vector<const char *> validationLayers;
     std::pmr::vector<std::unique_ptr<PhysicalDevice>> gpus;
     VkDebugUtilsMessengerEXT debugMessenger{VK_NULL_HANDLE};
 };

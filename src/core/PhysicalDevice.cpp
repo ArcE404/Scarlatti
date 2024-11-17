@@ -33,7 +33,7 @@ namespace ScarlattiCore {
         }
     }
 
-    Instance & PhysicalDevice::GetInstance() const {
+    Instance & PhysicalDevice::getInstance() const {
         return instance;
     }
 
@@ -53,6 +53,10 @@ namespace ScarlattiCore {
 
     VkPhysicalDeviceProperties PhysicalDevice::getProperties() const {
         return properties;
+    }
+
+    std::vector<VkQueueFamilyProperties> PhysicalDevice::getQueueFamilyProperties() const {
+        return queueFamilyProperties;
     }
 
     PhysicalDevice::~PhysicalDevice() {

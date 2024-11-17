@@ -4,7 +4,7 @@
 
 #include "core/Instance.h"
 #include "core/PhysicalDevice.h"
-
+#include "core/Device.h"
 using namespace std;
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -724,6 +724,11 @@ private:
 
         auto gpu = newInstance.getSuitableGpu(surface, deviceExtensions);
         physicalDevice = gpu.getHandler();
+
+        auto logicalDevice =  ScarlattiCore::Device(gpu, surface, deviceExtensions);
+        device = logicalDevice.getHandler();
+        graphicsQueue = logicalDevice.getGraphicsQueue();
+        presentQueue = logicalDevice.getPresentQueue();
     }
 
     void mainLoop() {

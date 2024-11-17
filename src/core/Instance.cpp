@@ -172,7 +172,8 @@ namespace ScarlattiCore {
     Instance::Instance(const std::string &application_name,
                        const std::unordered_map<const char *, bool> &required_extensions,
                        const std::vector<const char *> &required_validation_layers,
-                       uint32_t api_version) {
+                       uint32_t api_version)
+    {
         // We extract first the extensions that our instance can handle
         uint32_t instanceExtensionCount;
         vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
@@ -235,6 +236,10 @@ namespace ScarlattiCore {
 
             populateDebugMessengerCreateInfo(debugCreateInfo);
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
+
+            // we save the validation layers in the instance for later use in other parts of the code with access to
+            // the intance
+            validationLayers = requestedValidationLayers;
         } else {
             createInfo.enabledLayerCount = 0;
             createInfo.pNext = nullptr;
@@ -286,6 +291,10 @@ namespace ScarlattiCore {
         {
             gpus.push_back(std::make_unique<PhysicalDevice>(*this, physical_device));
         }
+    }
+
+    std::vector<const char *> Instance::getValidationLayers() const {
+        return validationLayers;
     }
 
     void Instance::findQueueFamiliesIndices(PhysicalDevice physical_device, VkSurfaceKHR _surface) {
@@ -364,7 +373,6 @@ namespace ScarlattiCore {
 
         throw std::runtime_error("failed to find a suitable GPU!");
     }
-
     PhysicalDevice & Instance::getFirstGpu() {
         return *gpus.front();
     }

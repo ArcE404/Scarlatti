@@ -15,6 +15,9 @@ include_directories(
 set(MY_HEADER_FILES
         src/core/Instance.h
         src/core/PhysicalDevice.h
+        src/core/Device.h
+        src/core/Queue.h
+        src/resources/DeviceResourceCache.h
 )
 
 set(MY_SOURCE_FILES
@@ -22,6 +25,9 @@ set(MY_SOURCE_FILES
         src/Common.h
         src/core/Instance.cpp
         src/core/PhysicalDevice.cpp
+        src/core/Device.cpp
+        src/core/Queue.cpp
+        src/resources/DeviceResourceCache.cpp
 )
 
 add_executable(${PROJECT_NAME}

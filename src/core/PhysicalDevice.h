@@ -10,12 +10,13 @@ class PhysicalDevice {
 public:
     PhysicalDevice(Instance &_instance, VkPhysicalDevice physical_device);
     ~PhysicalDevice();
-    Instance &GetInstance() const;
+    Instance &getInstance() const;
     VkPhysicalDevice getHandler();
     // TODO: implement a single extension verification
     bool isExtensionSupported(const std::string &extension) const;
     bool areExtensionsSupported(std::vector<char const *> required_extensions) const;
     VkPhysicalDeviceProperties getProperties() const;
+    std::vector<VkQueueFamilyProperties> getQueueFamilyProperties() const;
 private:
     Instance& instance;
     VkPhysicalDevice handler{VK_NULL_HANDLE};
