@@ -46,7 +46,7 @@ private:
     QueueFamilyIndices queueFamiliesIndices;
     SwapChainSupportDetails swapChainSupportDetails;
     std::vector<const char *> enabledExtensions;
-    std::vector<const char *> validationLayers;
+    const std::vector<const char *>& validationLayers;
     std::pmr::vector<std::unique_ptr<PhysicalDevice>> gpus;
     VkDebugUtilsMessengerEXT debugMessenger{VK_NULL_HANDLE};
 };

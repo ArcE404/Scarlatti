@@ -5,6 +5,7 @@
 #include "core/Instance.h"
 #include "core/PhysicalDevice.h"
 #include "core/Device.h"
+#include "core/SwapChain.h"
 using namespace std;
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -107,21 +108,21 @@ private:
     // this is the buffer to store the commands
     VkCommandBuffer commandBuffer;
 
-    VkSemaphore imageAvailableSemaphore;
+    VkSemaphore imageAvailableSemaphore; // it runs in the GPU only, restarts automatically
     VkSemaphore renderFinishedSemaphore;
-    VkFence inFlightFence;
+    VkFence inFlightFence; // it runs in the host (CPU) only, we need to manually restart it
 
     void initWindow() {
         glfwInit();
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        window = glfwCreateWindow(WIDTH, HEIGHT, "Scarlatti", nullptr, nullptr);
     }
 
     void initVulkan() {
         createInstance();
-        createLogicalDevice();
-        createSwapChain();
+        //createLogicalDevice();
+        //createSwapChain();
         createImageViews();
         createRenderPass();
         createGraphicsPipeline();
@@ -725,10 +726,14 @@ private:
         auto gpu = newInstance.getSuitableGpu(surface, deviceExtensions);
         physicalDevice = gpu.getHandler();
 
-        auto logicalDevice =  ScarlattiCore::Device(gpu, surface, deviceExtensions);
+        auto logicalDevice =  ScarlattiCore::Device(gpu, surface, deviceExtensions, required_validation_layers);
         device = logicalDevice.getHandler();
         graphicsQueue = logicalDevice.getGraphicsQueue();
         presentQueue = logicalDevice.getPresentQueue();
+
+        auto newSwapChain = ScarlattiCore::SwapChain(logicalDevice, window);
+        swapChain = newSwapChain.getHandler();
+
     }
 
     void mainLoop() {
@@ -741,7 +746,9 @@ private:
     }
 
     void drawFrame() {
+        // we wait for the fence, in other words, we wait until the last execution is done
         vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
+        // we restart the fence
         vkResetFences(device, 1, &inFlightFence);
 
         uint32_t imageIndex;
@@ -753,7 +760,7 @@ private:
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+        VkSemaphore waitSemaphores[] = {imageAvailableSemaphore}; // these are the semaphores to wait
         VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
@@ -762,11 +769,11 @@ private:
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffer;
 
-        VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+        VkSemaphore signalSemaphores[] = {renderFinishedSemaphore}; // these are the sepmaphores to be signal once finish the command buffer execution
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence) != VK_SUCCESS) {
+        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence) != VK_SUCCESS) { // here the fence will be active once the execution if done to use again the command buffer
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 

@@ -5,8 +5,11 @@
 #include "Device.h"
 
 namespace ScarlattiCore {
-    Device::Device(PhysicalDevice &gpu, VkSurfaceKHR surface,
-        std::vector<const char *> requested_extensions): gpu{gpu}, resourceCache{*this}{
+    Device::Device(PhysicalDevice &gpu,
+        VkSurfaceKHR &surface,
+        std::vector<const char *> requested_extensions,
+        const std::vector<const char *> &requested_layers): gpu{gpu}, surface{surface}
+    {
         QueueFamilyIndices indices = gpu.getInstance().getQueueFamilies();
 
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -36,8 +39,10 @@ namespace ScarlattiCore {
         createInfo.ppEnabledExtensionNames = requested_extensions.data();
 
         if (Common::isDebugEnabled()) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(gpu.getInstance().getValidationLayers().size());
-            createInfo.ppEnabledLayerNames = gpu.getInstance().getValidationLayers().data();
+            std::vector<const char *> required_validation_layers = {"VK_LAYER_KHRONOS_validation"};
+
+            createInfo.enabledLayerCount = static_cast<uint32_t>(required_validation_layers.size());
+            createInfo.ppEnabledLayerNames =  required_validation_layers.data();
         } else {
             createInfo.enabledLayerCount = 0;
         }
@@ -48,6 +53,11 @@ namespace ScarlattiCore {
 
         vkGetDeviceQueue(handler, indices.graphicsFamily.value(), 0, &graphicsQueue);
         vkGetDeviceQueue(handler, indices.presentFamily.value(), 0, &presentQueue);
+    }
+
+    Device::~Device() {
+        //todo: uncomment this code when possible
+        //vkDestroyDevice(handler, nullptr);
     }
 
     // find on the fly a queue family index that is not stored in the instance's family index struct
@@ -104,5 +114,13 @@ namespace ScarlattiCore {
 
     VkQueue Device::getPresentQueue() const {
         return presentQueue;
+    }
+
+    VkSurfaceKHR& Device::getSurface() const {
+        return surface;
+    }
+
+    PhysicalDevice Device::getPhysicalDevice() const{
+        return gpu;
     }
 } // ScarlattiCore

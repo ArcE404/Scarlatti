@@ -17,7 +17,7 @@ set(MY_HEADER_FILES
         src/core/PhysicalDevice.h
         src/core/Device.h
         src/core/Queue.h
-        src/resources/DeviceResourceCache.h
+        src/core/SwapChain.h
 )
 
 set(MY_SOURCE_FILES
@@ -27,7 +27,7 @@ set(MY_SOURCE_FILES
         src/core/PhysicalDevice.cpp
         src/core/Device.cpp
         src/core/Queue.cpp
-        src/resources/DeviceResourceCache.cpp
+        src/core/SwapChain.cpp
 )
 
 add_executable(${PROJECT_NAME}

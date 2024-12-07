@@ -25,7 +25,7 @@
 #include <fstream>
 #include <filesystem>
 #include <unordered_map>
-
+using namespace std;
 class Common {
 public:
     static void LOG(std::string message, VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {

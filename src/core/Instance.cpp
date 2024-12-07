@@ -141,8 +141,7 @@ namespace ScarlattiCore {
         // We ask for the optimal validation layers, we must ensure that the optimal are supported by the instance so
         // we send the supportedInstanceLayer to the method. Then if they exist we add them to the requested validation layers
         std::vector<const char *> optimal_validation_layers = getOptimalValidationLayers(supportedInstanceLayers);
-        requested_validation_layer.insert(requested_validation_layer.end(), optimal_validation_layers.begin(),
-                                         optimal_validation_layers.end());
+        //requested_validation_layer.insert(requested_validation_layer.end(), optimal_validation_layers.begin(), optimal_validation_layers.end());
 
         // We need to make a secondary validation to ensure that the requested layers by the user are also supported
         if (validateLayers(requested_validation_layer, supportedInstanceLayers)) {
@@ -172,8 +171,7 @@ namespace ScarlattiCore {
     Instance::Instance(const std::string &application_name,
                        const std::unordered_map<const char *, bool> &required_extensions,
                        const std::vector<const char *> &required_validation_layers,
-                       uint32_t api_version)
-    {
+                       uint32_t api_version): validationLayers(required_validation_layers) {
         // We extract first the extensions that our instance can handle
         uint32_t instanceExtensionCount;
         vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
@@ -237,9 +235,6 @@ namespace ScarlattiCore {
             populateDebugMessengerCreateInfo(debugCreateInfo);
             createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *) &debugCreateInfo;
 
-            // we save the validation layers in the instance for later use in other parts of the code with access to
-            // the intance
-            validationLayers = requestedValidationLayers;
         } else {
             createInfo.enabledLayerCount = 0;
             createInfo.pNext = nullptr;
